@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker — Guía de Comandos</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f1a;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --c-install: #2496ed;
+    --c-imgs:    #06b6d4;
+    --c-cont:    #10b981;
+    --c-net:     #a855f7;
+    --c-kali:    #ef4444;
+    --c-meta:    #f97316;
+    --c-tips:    #eab308;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 24px 60px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  .blob { position: fixed; border-radius: 50%; filter: blur(130px); opacity: 0.07; pointer-events: none; z-index: 0; }
+  .blob-1 { width: 500px; height: 500px; background: #2496ed; top: -150px; left: -100px; }
+  .blob-2 { width: 400px; height: 400px; background: #10b981; bottom: -100px; right: -80px; }
+  .blob-3 { width: 350px; height: 350px; background: #a855f7; top: 50%; left: 44%; }
+
+  .page {
+    position: relative; z-index: 1;
+    max-width: 1000px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+
+  /* HEADER */
+  header { text-align: center; animation: fadeDown 0.6s ease both; }
+  header .label {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 12px; display: block;
+  }
+  header h1 {
+    font-size: clamp(26px, 5vw, 44px); font-weight: 700; letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #2496ed 0%, #06b6d4 50%, #10b981 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  header .subtitle { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+
+  /* NAV */
+  .nav {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    animation: fadeDown 0.6s 0.08s ease both;
+  }
+  .nav a {
+    font-size: 11.5px; padding: 5px 13px; border-radius: 18px;
+    border: 1px solid; font-weight: 500; font-family: 'Space Mono', monospace;
+    text-decoration: none; transition: all 0.2s; white-space: nowrap;
+  }
+  .nav a:hover { transform: translateY(-2px); }
+
+  /* SECTION */
+  .section {
+    border-radius: 16px; padding: 22px 24px;
+    border: 1px solid; animation: fadeUp 0.6s ease both;
+    scroll-margin-top: 20px; transition: box-shadow 0.2s;
+  }
+  .section:hover { box-shadow: 0 8px 32px rgba(0,0,0,.3); }
+
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .section-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0; border: 1px solid;
+  }
+  .section-title { font-size: 16px; font-weight: 700; }
+  .section-badge {
+    margin-left: auto; font-family: 'Space Mono', monospace;
+    font-size: 10px; padding: 2px 9px; border-radius: 10px;
+    border: 1px solid; opacity: 0.75; white-space: nowrap;
+  }
+
+  /* THEMES */
+  .t-install { --c: var(--c-install); }
+  .t-imgs    { --c: var(--c-imgs); }
+  .t-cont    { --c: var(--c-cont); }
+  .t-net     { --c: var(--c-net); }
+  .t-kali    { --c: var(--c-kali); }
+  .t-meta    { --c: var(--c-meta); }
+  .t-tips    { --c: var(--c-tips); }
+
+  .section {
+    background: color-mix(in srgb, var(--c) 7%, var(--bg));
+    border-color: color-mix(in srgb, var(--c) 28%, transparent);
+    box-shadow: 0 0 28px color-mix(in srgb, var(--c) 5%, transparent);
+  }
+  .section:hover { box-shadow: 0 0 44px color-mix(in srgb, var(--c) 13%, transparent), 0 8px 24px rgba(0,0,0,.3); }
+  .section-title { color: var(--c); }
+  .section-icon  { background: color-mix(in srgb, var(--c) 14%, transparent); border-color: color-mix(in srgb, var(--c) 30%, transparent); }
+  .section-badge { color: var(--c); border-color: color-mix(in srgb, var(--c) 35%, transparent); background: color-mix(in srgb, var(--c) 10%, transparent); }
+  .nav a { color: var(--c, #94a3b8); border-color: color-mix(in srgb, var(--c, #94a3b8) 35%, transparent); background: color-mix(in srgb, var(--c, #94a3b8) 8%, transparent); }
+  .nav a:hover { background: color-mix(in srgb, var(--c, #94a3b8) 18%, transparent); }
+
+  /* CMD BLOCK */
+  .cmd-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .cmd-item {
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: border-color 0.2s;
+  }
+  .cmd-item:hover { border-color: color-mix(in srgb, var(--c) 30%, transparent); }
+
+  .cmd-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .cmd-desc-text {
+    font-size: 12.5px; color: var(--text-muted); line-height: 1.4; flex: 1;
+  }
+  .cmd-desc-text strong { color: var(--c); }
+
+  .cmd-code {
+    background: rgba(0,0,0,0.4);
+    padding: 10px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; color: #4ade80;
+    line-height: 1.85; overflow-x: auto;
+    white-space: pre;
+  }
+  .cmd-code .comment { color: #475569; }
+  .cmd-code .flag    { color: #fbbf24; }
+  .cmd-code .path    { color: #5eead4; }
+  .cmd-code .var     { color: #c084fc; }
+
+  /* NOTE */
+  .note {
+    margin-top: 12px; padding: 10px 14px; border-radius: 9px;
+    font-size: 12.5px; line-height: 1.55;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .note.warn   { background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25); color:#fcd34d; }
+  .note.info   { background:rgba(36,150,237,.08); border:1px solid rgba(36,150,237,.2);  color:#93c5fd; }
+  .note.tip    { background:rgba(16,185,129,.08);  border:1px solid rgba(16,185,129,.2);  color:#6ee7b7; }
+  .note.danger { background:rgba(239,68,68,.08);   border:1px solid rgba(239,68,68,.2);   color:#fca5a5; }
+  .note-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  /* QUICK REF */
+  .quick-ref {
+    background: linear-gradient(135deg, rgba(36,150,237,0.09), rgba(16,185,129,0.05));
+    border: 1px solid rgba(36,150,237,0.22);
+    border-radius: 14px; padding: 20px 22px;
+    animation: fadeUp 0.6s 0.05s ease both;
+  }
+  .quick-ref h3 {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: #60a5fa; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .quick-ref h3::after { content:''; flex:1; height:1px; background:rgba(36,150,237,0.2); }
+  .quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 9px; }
+  .qi {
+    background: rgba(255,255,255,0.03); border-radius: 8px;
+    padding: 9px 12px; border: 1px solid rgba(255,255,255,0.06);
+    transition: background 0.2s;
+  }
+  .qi:hover { background: rgba(36,150,237,0.08); }
+  .qi-cmd  { font-family:'Space Mono',monospace; font-size:11px; color:#fbbf24; margin-bottom:3px; }
+  .qi-desc { font-size:11.5px; color:var(--text-muted); line-height:1.4; }
+
+  footer {
+    text-align: center; font-size: 12px; color: #334155;
+    font-family: 'Space Mono', monospace;
+    animation: fadeUp 0.6s 0.5s ease both;
+  }
+
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+
+  @media(max-width:640px){ .quick-grid{grid-template-columns:1fr 1fr;} }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <span class="label">Contenedores — DevOps &amp; Seguridad</span>
+    <h1>Docker — Guía de Comandos</h1>
+    <p class="subtitle">Instalación, imágenes, contenedores, redes, Kali Linux y laboratorio con Metasploitable2</p>
+  </header>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a class="t-install" href="#s-install">⚙️ Instalación</a>
+    <a class="t-imgs"    href="#s-imgs">📦 Imágenes</a>
+    <a class="t-cont"    href="#s-cont">🐳 Contenedores</a>
+    <a class="t-net"     href="#s-net">🌐 Redes</a>
+    <a class="t-kali"    href="#s-kali">🔴 Kali Linux</a>
+    <a class="t-meta"    href="#s-meta">🎯 Metasploitable2</a>
+    <a class="t-tips"    href="#s-tips">💡 Tips &amp; Atajos</a>
+  </nav>
+
+  <!-- QUICK REF -->
+  <div class="quick-ref">
+    <h3>Referencia Rápida</h3>
+    <div class="quick-grid">
+      <div class="qi"><div class="qi-cmd">docker images</div><div class="qi-desc">Listar imágenes locales</div></div>
+      <div class="qi"><div class="qi-cmd">docker ps</div><div class="qi-desc">Contenedores activos</div></div>
+      <div class="qi"><div class="qi-cmd">docker ps -a</div><div class="qi-desc">Todos los contenedores</div></div>
+      <div class="qi"><div class="qi-cmd">docker pull &lt;img&gt;</div><div class="qi-desc">Descargar imagen</div></div>
+      <div class="qi"><div class="qi-cmd">docker run -it &lt;img&gt;</div><div class="qi-desc">Contenedor interactivo</div></div>
+      <div class="qi"><div class="qi-cmd">docker stop &lt;id&gt;</div><div class="qi-desc">Detener contenedor</div></div>
+      <div class="qi"><div class="qi-cmd">docker rm &lt;id&gt;</div><div class="qi-desc">Eliminar contenedor</div></div>
+      <div class="qi"><div class="qi-cmd">docker rmi &lt;img&gt;</div><div class="qi-desc">Eliminar imagen</div></div>
+      <div class="qi"><div class="qi-cmd">docker exec -it &lt;id&gt; bash</div><div class="qi-desc">Entrar a contenedor activo</div></div>
+      <div class="qi"><div class="qi-cmd">docker inspect &lt;id&gt;</div><div class="qi-desc">Info detallada del contenedor</div></div>
+    </div>
+  </div>
+
+  <!-- ① INSTALACIÓN -->
+  <div class="section t-install" id="s-install" style="animation-delay:0.05s">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <div class="section-title">Instalación de Docker</div>
+      <div class="section-badge">Ubuntu / Debian</div>
+    </div>
+    <div class="cmd-list">
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Actualizar repositorios e instalar Docker</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Actualizar lista de paquetes</span>
+sudo apt update
+
+<span class="comment"># Instalar Docker</span>
+sudo apt install docker.io -y</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Iniciar el servicio y habilitarlo para que arranque automáticamente con el sistema</div>
+        </div>
+        <div class="cmd-code">sudo systemctl start docker
+sudo systemctl enable docker</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Agregar tu usuario al grupo <strong>docker</strong> para no tener que usar <strong>sudo</strong> en cada comando</div>
+        </div>
+        <div class="cmd-code">sudo usermod -aG docker <span class="var">$USER</span>
+
+<span class="comment"># Aplicar el cambio en la sesión actual (sin cerrar sesión)</span>
+newgrp docker</div>
+      </div>
+
+    </div>
+    <div class="note tip" style="margin-top:12px;">
+      <span class="note-icon">💡</span>
+      <span>Después de agregar tu usuario al grupo docker, cierra y vuelve a abrir la terminal para que el cambio tome efecto de forma permanente.</span>
+    </div>
+  </div>
+
+  <!-- ② IMÁGENES -->
+  <div class="section t-imgs" id="s-imgs" style="animation-delay:0.08s">
+    <div class="section-header">
+      <div class="section-icon">📦</div>
+      <div class="section-title">Gestión de Imágenes</div>
+      <div class="section-badge">docker pull · images · rmi</div>
+    </div>
+    <div class="cmd-list">
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Ver todas las imágenes descargadas localmente con su tamaño, ID y fecha</div>
+        </div>
+        <div class="cmd-code">docker images</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Descargar una imagen desde Docker Hub sin ejecutar ningún contenedor</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Formato: docker pull nombre:version</span>
+docker pull ubuntu
+docker pull ubuntu:22.04        <span class="comment"># versión específica</span>
+docker pull kalilinux/kali-rolling</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Eliminar una imagen local. La imagen <strong>no debe estar en uso</strong> por ningún contenedor</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Por nombre</span>
+docker rmi ubuntu
+
+<span class="comment"># Por ID de imagen</span>
+docker rmi <span class="var">a1b2c3d4e5f6</span></div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Buscar imágenes disponibles en Docker Hub directamente desde la terminal</div>
+        </div>
+        <div class="cmd-code">docker search ubuntu</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ③ CONTENEDORES -->
+  <div class="section t-cont" id="s-cont" style="animation-delay:0.11s">
+    <div class="section-header">
+      <div class="section-icon">🐳</div>
+      <div class="section-title">Gestión de Contenedores</div>
+      <div class="section-badge">run · stop · rm · exec</div>
+    </div>
+    <div class="cmd-list">
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Listar contenedores: solo los activos, o todos incluyendo los detenidos</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Solo contenedores corriendo</span>
+docker ps
+
+<span class="comment"># Todos los contenedores (activos y detenidos)</span>
+docker ps -a</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Ejecutar un contenedor <strong>interactivo</strong> — entras directo a la terminal del contenedor</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># -i = interactivo  |  -t = terminal (tty)</span>
+docker run <span class="flag">-it</span> ubuntu bash</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Ejecutar un contenedor que <strong>se elimina automáticamente</strong> al salir — ideal para pruebas rápidas</div>
+        </div>
+        <div class="cmd-code">docker run <span class="flag">--rm -it</span> ubuntu bash</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Ejecutar un contenedor en <strong>segundo plano</strong> (modo daemon) con nombre personalizado</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># -d = detached (segundo plano)  |  --name = nombre del contenedor</span>
+docker run <span class="flag">-d -it</span> <span class="flag">--name</span> mi-contenedor ubuntu bash</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text"><strong>Entrar</strong> a un contenedor que ya está corriendo en segundo plano</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Por ID del contenedor</span>
+docker exec <span class="flag">-it</span> <span class="var">&lt;container_id&gt;</span> bash
+
+<span class="comment"># Por nombre</span>
+docker exec <span class="flag">-it</span> mi-contenedor bash</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Detener, iniciar y reiniciar contenedores</div>
+        </div>
+        <div class="cmd-code">docker stop  <span class="var">&lt;container_id&gt;</span>    <span class="comment"># detener</span>
+docker start <span class="var">&lt;container_id&gt;</span>    <span class="comment"># iniciar de nuevo</span>
+docker restart <span class="var">&lt;container_id&gt;</span>  <span class="comment"># reiniciar</span></div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Eliminar contenedores. Debe estar <strong>detenido</strong> antes de eliminar</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Eliminar uno</span>
+docker rm <span class="var">&lt;container_id&gt;</span>
+
+<span class="comment"># Forzar eliminación aunque esté corriendo</span>
+docker rm <span class="flag">-f</span> <span class="var">&lt;container_id&gt;</span>
+
+<span class="comment"># Eliminar todos los contenedores detenidos</span>
+docker container prune</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Ver información detallada de un contenedor: IP, volúmenes, variables de entorno y más</div>
+        </div>
+        <div class="cmd-code">docker inspect <span class="var">&lt;container_id&gt;</span>
+
+<span class="comment"># Filtrar solo la IP</span>
+docker inspect <span class="var">&lt;container_id&gt;</span> | grep IPAddress</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Ver los logs (salida) de un contenedor en segundo plano</div>
+        </div>
+        <div class="cmd-code">docker logs <span class="var">&lt;container_id&gt;</span>
+
+<span class="comment"># Seguir los logs en tiempo real</span>
+docker logs <span class="flag">-f</span> <span class="var">&lt;container_id&gt;</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ④ REDES -->
+  <div class="section t-net" id="s-net" style="animation-delay:0.14s">
+    <div class="section-header">
+      <div class="section-icon">🌐</div>
+      <div class="section-title">Redes en Docker</div>
+      <div class="section-badge">network · inspect · labnet</div>
+    </div>
+    <div class="cmd-list">
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Listar, crear e inspeccionar redes Docker</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Ver redes existentes</span>
+docker network ls
+
+<span class="comment"># Crear una red personalizada</span>
+docker network create labnet
+
+<span class="comment"># Ver detalles de una red</span>
+docker network inspect labnet</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Conectar contenedores a una <strong>misma red personalizada</strong> para que se comuniquen entre sí — ideal para laboratorios de hacking</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Correr la víctima en la red labnet</span>
+docker run <span class="flag">-d --name</span> victima <span class="flag">--network</span> labnet tleemcjr/metasploitable2
+
+<span class="comment"># Correr el atacante en la misma red</span>
+docker run <span class="flag">-it --name</span> atacante <span class="flag">--network</span> labnet kalilinux/kali-rolling bash</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Explorar la red <strong>desde dentro del contenedor</strong></div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Ver interfaces y direcciones IP</span>
+ip a
+
+<span class="comment"># Ver tabla de rutas</span>
+ip route
+
+<span class="comment"># Ver hostname del contenedor</span>
+hostname</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Eliminar una red personalizada (debe estar vacía — sin contenedores conectados)</div>
+        </div>
+        <div class="cmd-code">docker network rm labnet</div>
+      </div>
+
+    </div>
+    <div class="note info" style="margin-top:12px;">
+      <span class="note-icon">ℹ️</span>
+      <span>Los contenedores en la misma red personalizada pueden comunicarse usando su <strong>nombre como hostname</strong>. Por ejemplo: <code style="font-family:'Space Mono',monospace; color:#7dd3fc;">ping victima</code> desde el contenedor atacante.</span>
+    </div>
+  </div>
+
+  <!-- ⑤ KALI LINUX -->
+  <div class="section t-kali" id="s-kali" style="animation-delay:0.17s">
+    <div class="section-header">
+      <div class="section-icon">🔴</div>
+      <div class="section-title">Kali Linux en Docker</div>
+      <div class="section-badge">kali-rolling · Herramientas</div>
+    </div>
+    <div class="cmd-list">
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Descargar y ejecutar Kali Linux completo en un contenedor interactivo</div>
+        </div>
+        <div class="cmd-code">docker pull kalilinux/kali-rolling
+docker run <span class="flag">-it --name</span> kali kalilinux/kali-rolling bash</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Actualizar el sistema e instalar <strong>herramientas de red esenciales</strong> dentro del contenedor</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Actualizar repositorios y paquetes</span>
+apt update && apt upgrade -y
+
+<span class="comment"># Instalar herramientas de red esenciales</span>
+apt install -y nmap net-tools iputils-ping curl wget \
+              netcat-openbsd traceroute dnsutils</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Instalar herramientas específicas de seguridad y análisis</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Herramientas de análisis de red y seguridad</span>
+apt install -y nmap wireshark netcat
+
+<span class="comment"># Metasploit Framework</span>
+apt install -y metasploit-framework
+
+<span class="comment"># Suite completa de herramientas Kali</span>
+apt install -y kali-tools-top10</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Verificar el entorno del sistema operativo dentro del contenedor</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Ver información del sistema operativo</span>
+cat /etc/os-release
+
+<span class="comment"># Ver IP asignada al contenedor</span>
+ip a
+
+<span class="comment"># Ver hostname</span>
+hostname</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ⑥ METASPLOITABLE2 -->
+  <div class="section t-meta" id="s-meta" style="animation-delay:0.20s">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div class="section-title">Laboratorio — Metasploitable2</div>
+      <div class="section-badge">Máquina vulnerable</div>
+    </div>
+    <div class="cmd-list">
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Descargar y correr Metasploitable2 en <strong>segundo plano</strong> como máquina víctima</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Descargar la imagen vulnerable</span>
+docker pull tleemcjr/metasploitable2
+
+<span class="comment"># Correr en segundo plano con nombre "victima"</span>
+docker run <span class="flag">-d --name</span> victima tleemcjr/metasploitable2</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Verificar que está activa y obtener su <strong>dirección IP</strong> para atacar</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Confirmar que el contenedor está corriendo</span>
+docker ps
+
+<span class="comment"># Obtener la IP asignada a la víctima</span>
+docker inspect victima | grep IPAddress</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Montar el <strong>laboratorio completo</strong>: víctima y atacante en la misma red aislada</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># 1. Crear red de laboratorio aislada</span>
+docker network create labnet
+
+<span class="comment"># 2. Iniciar la víctima en esa red</span>
+docker run <span class="flag">-d --name</span> victima <span class="flag">--network</span> labnet tleemcjr/metasploitable2
+
+<span class="comment"># 3. Iniciar el atacante (Kali) en la misma red</span>
+docker run <span class="flag">-it --name</span> atacante <span class="flag">--network</span> labnet kalilinux/kali-rolling bash
+
+<span class="comment"># 4. Desde el atacante, verificar conectividad</span>
+ping victima
+nmap -sV victima</div>
+      </div>
+
+    </div>
+    <div class="note danger" style="margin-top:12px;">
+      <span class="note-icon">⛔</span>
+      <span>Metasploitable2 es una máquina <strong>intencionalmente vulnerable</strong>. Úsala solo en redes locales aisladas de laboratorio. Nunca la expongas a Internet.</span>
+    </div>
+  </div>
+
+  <!-- ⑦ TIPS & ATAJOS -->
+  <div class="section t-tips" id="s-tips" style="animation-delay:0.23s">
+    <div class="section-header">
+      <div class="section-icon">💡</div>
+      <div class="section-title">Tips, Atajos y Limpieza</div>
+      <div class="section-badge">Atajos · prune · attach</div>
+    </div>
+    <div class="cmd-list">
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text"><strong>Salir sin detener</strong> el contenedor — atajo de teclado para "desconectarse" sin matar el proceso</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Dentro del contenedor, presiona:</span>
+Ctrl + P  →  luego  Ctrl + Q
+
+<span class="comment"># Volver a conectarte al mismo contenedor después</span>
+docker attach <span class="var">&lt;container_id_o_nombre&gt;</span></div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Diferencia entre <strong>attach</strong> y <strong>exec</strong> para entrar a un contenedor</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># attach: reconecta al proceso principal del contenedor</span>
+docker attach <span class="var">&lt;id&gt;</span>
+
+<span class="comment"># exec: abre un NUEVO proceso bash dentro del contenedor (recomendado)</span>
+docker exec <span class="flag">-it</span> <span class="var">&lt;id&gt;</span> bash</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Limpieza general — eliminar todo lo que no esté en uso</div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Eliminar contenedores detenidos</span>
+docker container prune
+
+<span class="comment"># Eliminar imágenes sin usar</span>
+docker image prune
+
+<span class="comment"># Eliminar redes sin usar</span>
+docker network prune
+
+<span class="comment"># Limpieza total (contenedores, imágenes, redes y caché)</span>
+docker system prune <span class="flag">-a</span></div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Ver uso de recursos de los contenedores activos en tiempo real</div>
+        </div>
+        <div class="cmd-code">docker stats</div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-header">
+          <div class="cmd-desc-text">Copiar archivos entre el <strong>sistema anfitrión y un contenedor</strong></div>
+        </div>
+        <div class="cmd-code"><span class="comment"># Del contenedor al host</span>
+docker cp <span class="var">&lt;id&gt;</span>:<span class="path">/ruta/archivo</span> <span class="path">./destino/</span>
+
+<span class="comment"># Del host al contenedor</span>
+docker cp <span class="path">./archivo.txt</span> <span class="var">&lt;id&gt;</span>:<span class="path">/ruta/destino/</span></div>
+      </div>
+
+    </div>
+    <div class="note tip" style="margin-top:12px;">
+      <span class="note-icon">💡</span>
+      <span>Prefiere siempre <strong>docker exec -it &lt;id&gt; bash</strong> sobre <strong>docker attach</strong> para entrar a un contenedor. Con exec abres una nueva sesión independiente y no corres el riesgo de detener el proceso principal.</span>
+    </div>
+  </div>
+
+  <footer>Docker — Guía de Comandos &mdash; Material Educativo · Ricardo Hernández</footer>
+
+</div>
+</body>
+</html>
